@@ -1,4 +1,4 @@
-# Claude CLI Companion
+# [Claude CLI Companion](https://marketplace.visualstudio.com/items?itemName=rishabh-rathod.claude-cli-companion)
 
 A VS Code extension that bridges your editor and the [Claude Code](https://claude.ai/code) CLI. Send precise file references to Claude with a single keybind.
 
