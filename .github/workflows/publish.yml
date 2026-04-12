@@ -22,8 +22,8 @@ jobs:
 
       - run: npm ci
 
-      - name: Bump minor version
-        run: npm version minor --no-git-tag-version
+      - name: Bump patch version
+        run: npm version patch --no-git-tag-version
 
       - name: Publish to VS Code Marketplace
         run: npx vsce publish
