@@ -3,12 +3,23 @@
   "publisher": "rishabh-rathod",
   "displayName": "Claude CLI Companion",
   "description": "Send @file:lines references to Claude Code from the editor with a single keybind",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["AI", "Other"],
-  "keywords": ["claude", "claude code", "ai", "context", "diff", "terminal", "anthropic"],
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "keywords": [
+    "claude",
+    "claude code",
+    "ai",
+    "context",
+    "diff",
+    "terminal",
+    "anthropic"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/rishabhrathod01/claude-cli-companion"
