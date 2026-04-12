@@ -1,0 +1,23 @@
+.github/workflows/publish.yml
+  6a013f5f43f54943 25-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "66b81f175fc4e1b9b5d3fb241290eaa24fae5f2e",
+  "prompts": {
+    "6a013f5f43f54943": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9e4a165f-35d0-46af-9022-a1a5a2a4e449",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "rishabhrathod01",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
