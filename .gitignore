@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Compiled output
+out/
+
+# VS Code extension packages
+*.vsix
+
+# TypeScript build info
+*.tsbuildinfo
+
+# OS
+*.DS_Store

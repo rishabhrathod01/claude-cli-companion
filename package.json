@@ -1,0 +1,66 @@
+{
+  "name": "claude-cli-companion",
+  "publisher": "rishabh-rathod",
+  "displayName": "Claude CLI Companion",
+  "description": "Send @file:lines references to Claude Code from the editor with a single keybind",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["AI", "Other"],
+  "keywords": ["claude", "claude code", "ai", "context", "diff", "terminal", "anthropic"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rishabhrathod01/claude-cli-companion"
+  },
+  "bugs": {
+    "url": "https://github.com/rishabhrathod01/claude-cli-companion/issues"
+  },
+  "homepage": "https://github.com/rishabhrathod01/claude-cli-companion#readme",
+  "galleryBanner": {
+    "color": "#CC6633",
+    "theme": "dark"
+  },
+  "license": "MIT",
+  "icon": "icon.png",
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "claude-cli-companion.sendContext",
+        "title": "Send File Context to Claude"
+      },
+      {
+        "command": "claude-cli-companion.openTerminalAndSendContext",
+        "title": "Send File Context Label to Claude"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "claude-cli-companion.openTerminalAndSendContext",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "claude-cli-companion.sendContext",
+        "key": "ctrl+l",
+        "mac": "cmd+l",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "@vscode/vsce": "^3.3.2",
+    "typescript": "^5.3.0"
+  }
+}
