@@ -1,0 +1,23 @@
+README.md
+  6a013f5f43f54943 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "59d8ca8811af64acadc88020104ae3c9bf633dbb",
+  "prompts": {
+    "6a013f5f43f54943": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9e4a165f-35d0-46af-9022-a1a5a2a4e449",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "rishabhrathod01",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
