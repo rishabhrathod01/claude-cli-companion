@@ -3,7 +3,7 @@
   "publisher": "rishabh-rathod",
   "displayName": "Claude CLI Companion",
   "description": "Send @file:lines references to Claude Code from the editor with a single keybind",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "engines": {
     "vscode": "^1.85.0"
   },
