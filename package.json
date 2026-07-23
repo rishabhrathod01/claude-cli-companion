@@ -44,8 +44,98 @@
       {
         "command": "claude-cli-companion.openTerminalAndSendContext",
         "title": "Send File Context Label to Claude"
+      },
+      {
+        "command": "claude-cli-companion.sendFromExplorer",
+        "title": "Send to Claude"
+      },
+      {
+        "command": "claudeDiff.acceptChanges",
+        "title": "Accept Claude Changes",
+        "icon": "$(check)"
+      },
+      {
+        "command": "claudeDiff.rejectChanges",
+        "title": "Reject Claude Changes",
+        "icon": "$(discard)"
+      },
+      {
+        "command": "claudeDiff.acceptAll",
+        "title": "Claude Diff: Accept All Pending Changes"
+      },
+      {
+        "command": "claudeDiff.rejectAll",
+        "title": "Claude Diff: Reject All Pending Changes"
+      },
+      {
+        "command": "claudeDiff.showQueue",
+        "title": "Claude Diff: Show Pending Review Queue"
+      },
+      {
+        "command": "claudeDiff.installHooks",
+        "title": "Claude Diff: Install Claude Code Hooks"
+      },
+      {
+        "command": "claudePlan.build",
+        "title": "Build Plan",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "claudePlan.discard",
+        "title": "Discard Plan",
+        "icon": "$(trash)"
       }
     ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "claude-cli-companion.sendFromExplorer",
+          "group": "navigation@99"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "claudeDiff.acceptChanges",
+          "when": "claudeDiff.isDiffOpen",
+          "group": "navigation@1"
+        },
+        {
+          "command": "claudeDiff.rejectChanges",
+          "when": "claudeDiff.isDiffOpen",
+          "group": "navigation@2"
+        },
+        {
+          "command": "claudePlan.build",
+          "when": "resourcePath =~ /\\.claude\\/plans\\/[^\\/]*\\.md$/",
+          "group": "navigation@1"
+        },
+        {
+          "command": "claudePlan.discard",
+          "when": "resourcePath =~ /\\.claude\\/plans\\/[^\\/]*\\.md$/",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Claude CLI Companion",
+      "properties": {
+        "claudeDiff.port": {
+          "type": "number",
+          "default": 7878,
+          "description": "Port for the local hook server"
+        },
+        "claudeDiff.autoOpenDiff": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open diff view when Claude edits a file"
+        },
+        "claudeDiff.showNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notifications when files are changed by Claude"
+        }
+      }
+    },
     "keybindings": [
       {
         "command": "claude-cli-companion.openTerminalAndSendContext",
@@ -58,6 +148,12 @@
         "key": "ctrl+l",
         "mac": "cmd+l",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "claude-cli-companion.sendFromExplorer",
+        "key": "ctrl+l",
+        "mac": "cmd+l",
+        "when": "explorerViewletFocus"
       }
     ]
   },
@@ -68,8 +164,8 @@
     "package": "vsce package"
   },
   "devDependencies": {
+    "@types/node": "^20.19.43",
     "@types/vscode": "^1.85.0",
-    "@types/node": "^20.0.0",
     "@vscode/vsce": "^3.3.2",
     "typescript": "^5.3.0"
   }
