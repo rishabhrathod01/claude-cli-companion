@@ -1,0 +1,72 @@
+src/explorerSender.ts
+  6a013f5f43f54943 1-117
+src/originalProvider.ts
+  6a013f5f43f54943 1-28
+package.json
+  s_6fc485339334de::t_a5aa3b5daece8a 109,114
+  6a013f5f43f54943 47-86,89-108,110-113,115-138,151-156
+src/reviewQueue.ts
+  6a013f5f43f54943 1-37
+src/statusBar.ts
+  6a013f5f43f54943 1-28
+src/extension.ts
+  6a013f5f43f54943 1-2,5,7-11,136-194,197-239,245-248,254,274-296,298,300-316,319-334,336-343,345-349
+  s_6fc485339334de::t_e16b6cd6eb3da9 6
+  s_6fc485339334de::t_964f2c77ae7d16 240-244,249,251,256-269
+  s_6fc485339334de::t_2cbc4768c84dea 250,252-253,255
+  s_6fc485339334de::t_ea7b1c740606c2 12
+  s_6fc485339334de::t_b2c93b3a446ee0 297,299
+  s_6fc485339334de::t_69e74dda2fb4b2 34-35,38
+  s_6fc485339334de::t_69b5ef55ffec9c 317-318
+  s_6fc485339334de::t_0e82b6070f0470 335,344
+  s_6fc485339334de::t_a5149420a70163 195
+  s_6fc485339334de::t_91f4535d41218a 196
+src/planCodeLens.ts
+  s_6fc485339334de::t_850df1453542fd 2,5-7,11,20,23,25
+  s_6fc485339334de::t_ca796344fadc2f 1,3-4,8-10,12-19,21-22,24,26-29
+src/planManager.ts
+  s_6fc485339334de::t_8ee86a3ff62c5e 6-16,25-27,29,31,33,38-41,57,62,66-67,75,79-80,84,91,93,95
+  6a013f5f43f54943 1-5,17-24,28,30,32,34-37,42-56,58-61,63-65,68-74,76-78,81-83,85-90,92,94,96-106
+src/hookServer.ts
+  s_6fc485339334de::t_afaa0e8d4840a4 19,28
+  s_6fc485339334de::t_67a70fbc0567ae 8
+  6a013f5f43f54943 1-7,9-18,20-27,29-52
+src/diffManager.ts
+  s_6fc485339334de::t_fb74a8335d5662 17-22
+  s_6fc485339334de::t_3f88515dcbc8e6 7
+  6a013f5f43f54943 1-6,8-16,23-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "a847eab268b0998ecfa5bb9374bff407659d63c8",
+  "prompts": {
+    "6a013f5f43f54943": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9e4a165f-35d0-46af-9022-a1a5a2a4e449",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": null,
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 758,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_254a44d1f12105": {
+      "author": "rishabhrathod01 <rathod.rishabh@prophecy.io>"
+    }
+  },
+  "sessions": {
+    "s_6fc485339334de": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "478d744f-038b-49bd-a81d-0928352feebc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": null
+    }
+  }
+}
