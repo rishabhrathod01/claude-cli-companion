@@ -1,0 +1,20 @@
+README.md
+  s_6fc485339334de::t_3981e44a93028d 3,16,22-64,71,77-91,93,95-101,107-116,119-121,123-134,140-145
+  s_6fc485339334de::t_0d15e3b6a36f8f 146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "dea22fbe847d4478809e0998128155327edadc30",
+  "prompts": {},
+  "sessions": {
+    "s_6fc485339334de": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "478d744f-038b-49bd-a81d-0928352feebc",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "rishabhrathod01 <rathod.rishabh@prophecy.io>"
+    }
+  }
+}
