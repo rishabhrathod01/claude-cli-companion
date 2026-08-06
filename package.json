@@ -35,6 +35,9 @@
   "license": "MIT",
   "icon": "icon.png",
   "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "commands": [
       {
@@ -84,6 +87,10 @@
         "command": "claudePlan.discard",
         "title": "Discard Plan",
         "icon": "$(trash)"
+      },
+      {
+        "command": "claudePlan.openLatest",
+        "title": "Claude: Open Latest Plan"
       }
     ],
     "menus": {
@@ -122,7 +129,7 @@
         "claudeDiff.port": {
           "type": "number",
           "default": 7878,
-          "description": "Port for the local hook server"
+          "description": "Preferred port for this window's local hook server. Every window runs its own server, so when this port is taken an ephemeral one is used instead — the Claude Code hook finds each window through the instance registry, not through a fixed port."
         },
         "claudeDiff.autoOpenDiff": {
           "type": "boolean",
@@ -133,6 +140,21 @@
           "type": "boolean",
           "default": true,
           "description": "Show notifications when files are changed by Claude"
+        },
+        "claudePlan.autoOpen": {
+          "type": "string",
+          "enum": [
+            "owner",
+            "always",
+            "never"
+          ],
+          "enumDescriptions": [
+            "Open a plan only in the window whose workspace folder owns the Claude session that wrote it",
+            "Open every plan in every window (the behaviour before ownership routing)",
+            "Never open plans automatically — use 'Claude: Open Latest Plan' instead"
+          ],
+          "default": "owner",
+          "description": "Which window automatically opens a Claude plan file"
         }
       }
     },

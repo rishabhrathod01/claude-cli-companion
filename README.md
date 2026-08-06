@@ -39,6 +39,10 @@ Because the plan opens in a regular editor, everything you already know works on
 
 The plan file itself is left on disk under `~/.claude/plans/` either way — it's Claude Code's own session artifact, not something this extension deletes.
 
+**With several VS Code windows open, only the right one opens the plan.** `~/.claude/plans/` is a single shared directory, so every window sees every plan. The extension figures out which project the plan's Claude session belongs to — by reading the session root from Claude's own transcript under `~/.claude/projects/` — and renders it only in the window whose workspace folder contains it. Nested cases resolve to the most specific window, so a plan written in a git worktree opens in the worktree's window rather than the repo root's.
+
+If Claude was run from a directory that no open window has, no window opens the plan. Run **`Claude: Open Latest Plan`** from the Command Palette to pull it up anyway, or set `claudePlan.autoOpen` to `always` to restore the old open-everywhere behaviour.
+
 > Plan files never trigger the diff-review feature below, even though Claude writes them with the same `Write` tool — the extension always renders `~/.claude/plans/*.md` as a plan, not a diff.
 
 ### Diff review — Accept / Reject Claude's file edits
@@ -50,6 +54,10 @@ When Claude edits a file in your workspace (`Edit`, `Write`, or `MultiEdit`), th
 - **Accept All / Reject All** — resolve every pending review at once
 - **Show Pending Review Queue** — pick from a list of files Claude has changed that you haven't reviewed yet
 - A status bar item shows `$(check) Claude` when there's nothing pending, or `$(diff) Claude: N pending` otherwise — click it to open the queue
+
+**Committing a file clears it from the count.** Committing a change is accepting it, so the extension watches your repository and drops any pending review whose file now matches `git HEAD` — including commits made from an outside terminal. A file that was committed but has picked up further edits since still differs from `HEAD`, so it stays pending.
+
+**Diffs open in the window that owns the file.** Every window runs its own hook server on its own port and registers itself, so a change is reviewed in the window whose workspace folder contains the edited file — not in whichever window happened to start first.
 
 This feature requires a one-time hook installed into Claude Code's own settings (see **Setup** below); without it, edits still happen, they just won't trigger an automatic diff.
 
@@ -67,10 +75,10 @@ This feature requires a one-time hook installed into Claude Code's own settings 
 ## Requirements
 
 - [Claude Code CLI](https://claude.ai/code) installed and accessible as `claude` in your `PATH`
-- A terminal open in VS Code whose name contains `claude` (case-insensitive) — the CLI names its terminal `Claude` by default
+- A terminal open in VS Code running Claude Code
 - `jq` and `curl` on your `PATH` — only needed for the diff-review hook
 
-> **Note:** The extension identifies the Claude terminal by looking for the word `claude` in the terminal name. If `Cmd+L` shows a "no terminal found" warning, check that Claude Code is running and its terminal tab is named something containing `claude`. Use `Cmd+Shift+L` to automatically create and name a terminal correctly if one isn't open yet.
+> **Note:** The extension finds the Claude terminal by the terminal name containing `claude`, by shell integration reporting a running `claude` command, or by spotting a `claude` process under the terminal's shell — so a plain terminal you typed `claude` into is found too. When more than one qualifies, the focused terminal wins. If `Cmd+L` still shows a "no terminal found" warning, use `Cmd+Shift+L` to have the extension open and name one for you.
 
 ---
 
@@ -89,6 +97,7 @@ This feature requires a one-time hook installed into Claude Code's own settings 
 | `Claude Diff: Install Claude Code Hooks` | (Re)install the `PostToolUse` hook used for diff review |
 | `Build Plan` | Send the active plan file to Claude in full, then close its tabs |
 | `Discard Plan` | Close the active plan file's tabs without sending it |
+| `Claude: Open Latest Plan` | Open a recent plan in this window regardless of which session wrote it |
 
 ---
 
@@ -108,9 +117,10 @@ This feature requires a one-time hook installed into Claude Code's own settings 
 
 | Setting | Default | Description |
 |---|---|---|
-| `claudeDiff.port` | `7878` | Port for the local hook server used by diff review |
+| `claudeDiff.port` | `7878` | Preferred port for this window's hook server. Every window runs one, so when the port is taken an ephemeral one is used instead — the hook finds each window through its registry entry, not a fixed port |
 | `claudeDiff.autoOpenDiff` | `true` | Automatically open the diff view when Claude edits a file |
 | `claudeDiff.showNotifications` | `true` | Show a notification (with a "Review Changes" action) instead of auto-opening, when `autoOpenDiff` is off |
+| `claudePlan.autoOpen` | `owner` | Which window opens a plan. `owner` = only the window owning the Claude session; `always` = every window; `never` = none (use `Claude: Open Latest Plan`) |
 
 ---
 
