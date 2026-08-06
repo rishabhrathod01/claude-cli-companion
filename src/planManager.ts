@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { targetViewColumnOrBeside } from './editorGroups';
 
 /** Directory where Claude Code writes plan-mode markdown files. */
 export const PLANS_DIR = path.join(os.homedir(), '.claude', 'plans');
@@ -26,11 +27,19 @@ export class PlanManager {
    * the side. Focus is preserved so rendering a plan mid-stream does not steal
    * the keyboard from the terminal where Claude is still working.
    *
+   * Targets the group that already holds ordinary files rather than the active
+   * one — when Claude Code runs as an editor-area terminal, the active group is
+   * the terminal's, and the plan would open on top of the session that wrote it.
+   *
    * @param filePath - Absolute path of the plan markdown file.
    */
   async render(filePath: string): Promise<void> {
     const uri = vscode.Uri.file(filePath);
-    await vscode.window.showTextDocument(uri, { preview: false, preserveFocus: true });
+    await vscode.window.showTextDocument(uri, {
+      viewColumn: targetViewColumnOrBeside(isPlanFile),
+      preview: false,
+      preserveFocus: true,
+    });
     await vscode.commands.executeCommand('markdown.showPreviewToSide', uri);
   }
 

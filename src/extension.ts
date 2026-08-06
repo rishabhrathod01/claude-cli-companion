@@ -10,6 +10,20 @@ import { DiffManager }             from './diffManager';
 import { HookServer }              from './hookServer';
 import { StatusBarItem }           from './statusBar';
 import { PlanCodeLensProvider }    from './planCodeLens';
+import { ClaudeTerminalTracker }   from './claudeTerminals';
+import { CommitReconciler }        from './commitReconciler';
+import { InstanceRegistry }        from './instanceRegistry';
+import { PlanAutoOpen, PlanRouter } from './planOwnership';
+
+/**
+ * Version of the hook entry this extension writes into ~/.claude/settings.json.
+ * Bumped whenever the command changes so older entries are rewritten in place.
+ */
+const HOOK_VERSION = 2;
+
+/** Set in {@link activate} so {@link deactivate} can tear down cross-window state. */
+let registryRef: InstanceRegistry | undefined;
+let hookServerRef: HookServer | undefined;
 
 /**
  * Entry point called by VS Code when the extension is activated.
@@ -19,6 +33,12 @@ import { PlanCodeLensProvider }    from './planCodeLens';
  *   cleaned up automatically when the extension is deactivated.
  */
 export function activate(context: vscode.ExtensionContext) {
+  const log = vscode.window.createOutputChannel('Claude CLI Companion');
+  context.subscriptions.push(log);
+
+  const terminals = new ClaudeTerminalTracker(log);
+  context.subscriptions.push(terminals);
+
   /**
    * Builds a native Claude Code `@file:lines` reference from the active editor
    * state. Uses the cursor line when there is no selection, or the selected
@@ -62,11 +82,11 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   /**
-   * Finds the first open terminal whose name contains `"claude"` (case-insensitive).
-   * Returns `undefined` when no matching terminal exists.
+   * Finds the terminal running Claude Code in this window, or `undefined`.
+   * See {@link ClaudeTerminalTracker} for the signals it considers.
    */
   function findClaudeTerminal(): vscode.Terminal | undefined {
-    return vscode.window.terminals.find((t) => t.name.toLowerCase().includes('claude'));
+    return terminals.find();
   }
 
   /**
@@ -193,14 +213,44 @@ export function activate(context: vscode.ExtensionContext) {
   const queue       = new ReviewQueue();
   const diffMgr     = new DiffManager(provider, queue);
   const planManager = new PlanManager(findClaudeTerminal, sendRefToTerminal);
-  const hookServer  = new HookServer(diffMgr);
   const statusBar   = new StatusBarItem(queue);
+  const reconciler  = new CommitReconciler(queue, diffMgr, log);
+
+  // Makes this window visible to its siblings: the plan router reads every other
+  // window's folders to settle ownership, and the hook uses the recorded port.
+  const registry = new InstanceRegistry(log);
+  registry.start();
+  registryRef = registry;
+
+  const planRouter = new PlanRouter({
+    planManager,
+    registry,
+    getMode: () => vscode.workspace
+      .getConfiguration('claudePlan')
+      .get<PlanAutoOpen>('autoOpen', 'owner'),
+    log,
+  });
+
+  const hookServer = new HookServer(
+    diffMgr,
+    (planPath, cwd) => void planRouter.handle(planPath, cwd),
+    log,
+  );
+  hookServerRef = hookServer;
 
   context.subscriptions.push(
     vscode.workspace.registerTextDocumentContentProvider(OriginalContentProvider.scheme, provider),
+    registry,
+    hookServer,
+    reconciler,
   );
 
-  hookServer.start(port);
+  void hookServer.start(port).then(bound => {
+    if (bound !== undefined) {
+      registry.setPort(bound);
+      log.appendLine(`[hook] listening on 127.0.0.1:${bound}`);
+    }
+  });
 
   context.subscriptions.push(
     vscode.commands.registerCommand('claudeDiff.acceptChanges', async () => {
@@ -230,11 +280,11 @@ export function activate(context: vscode.ExtensionContext) {
       );
       if (selected) { await diffMgr.openDiff(selected.filePath); }
     }),
-    vscode.commands.registerCommand('claudeDiff.installHooks', () => installClaudeCodeHooks(port)),
+    vscode.commands.registerCommand('claudeDiff.installHooks', () => installClaudeCodeHooks()),
     statusBar,
   );
 
-  checkAndPromptHookInstall(port);
+  checkAndPromptHookInstall(log);
 
   // ── Plan viewer ───────────────────────────────────────────────────────────
   //
@@ -242,10 +292,15 @@ export function activate(context: vscode.ExtensionContext) {
   // directory and, when a new plan file appears, render it as source + markdown
   // preview so the user can select lines and send them back with Cmd+L. This is
   // fully self-contained — no hooks, jq, or curl required for plan capture.
+  //
+  // Every open VS Code window watches the same directory, so the render itself
+  // goes through PlanRouter, which renders only in the window that owns the
+  // session that wrote the plan.
 
   context.subscriptions.push(
     vscode.commands.registerCommand('claudePlan.build',   () => planManager.buildActivePlan()),
     vscode.commands.registerCommand('claudePlan.discard', () => planManager.discardActivePlan()),
+    vscode.commands.registerCommand('claudePlan.openLatest', () => openLatestPlan(planRouter)),
     // Register for all markdown; the provider filters to plan files by path.
     vscode.languages.registerCodeLensProvider(
       { language: 'markdown', scheme: 'file' },
@@ -253,32 +308,114 @@ export function activate(context: vscode.ExtensionContext) {
     ),
   );
 
+  // A non-recursive watcher on a directory that does not exist silently never
+  // fires, so make sure it is there before watching.
+  try {
+    fs.mkdirSync(PLANS_DIR, { recursive: true });
+  } catch (err) {
+    log.appendLine(`[plan] could not create ${PLANS_DIR}: ${String(err)}`);
+  }
+
   const planWatcher = vscode.workspace.createFileSystemWatcher(
     new vscode.RelativePattern(vscode.Uri.file(PLANS_DIR), '*.md'),
   );
-  const openedPlans = new Set<string>();
-  const renderPlanOnce = (uri: vscode.Uri) => {
-    if (openedPlans.has(uri.fsPath)) { return; }
-    openedPlans.add(uri.fsPath);
-    void planManager.render(uri.fsPath);
-  };
+  const routePlan = (uri: vscode.Uri) => void planRouter.handle(uri.fsPath);
   // Fire on both create and the first change: depending on how the file is
   // written the create event can arrive empty (or not at all on rename).
-  planWatcher.onDidCreate(renderPlanOnce);
-  planWatcher.onDidChange(renderPlanOnce);
+  planWatcher.onDidCreate(routePlan);
+  planWatcher.onDidChange(routePlan);
   context.subscriptions.push(planWatcher);
 }
 
-/** Called by VS Code when the extension is deactivated. All disposables registered via `context.subscriptions` are cleaned up automatically. */
-export function deactivate() {}
+/**
+ * Called by VS Code when the extension is deactivated. Disposables registered via
+ * `context.subscriptions` are cleaned up automatically, but the instance record
+ * and the hook server are also torn down explicitly so a sibling window never
+ * sees this one as live.
+ */
+export function deactivate() {
+  hookServerRef?.stop();
+  hookServerRef = undefined;
+  registryRef?.dispose();
+  registryRef = undefined;
+}
+
+// ── Plan escape hatch ─────────────────────────────────────────────────────────
+
+/**
+ * Opens a plan on explicit request, bypassing ownership.
+ *
+ * When Claude runs from a directory no window has open, no window claims the
+ * plan — deliberately, since picking an arbitrary window is the bug this routing
+ * exists to fix. This command is how the user retrieves it anyway.
+ */
+async function openLatestPlan(router: PlanRouter): Promise<void> {
+  let plans: Array<{ file: string; mtime: number }>;
+  try {
+    plans = fs.readdirSync(PLANS_DIR)
+      .filter(name => name.endsWith('.md'))
+      .map(name => {
+        const file = path.join(PLANS_DIR, name);
+        return { file, mtime: fs.statSync(file).mtimeMs };
+      })
+      .sort((a, b) => b.mtime - a.mtime)
+      .slice(0, 10);
+  } catch {
+    plans = [];
+  }
+
+  if (plans.length === 0) {
+    vscode.window.showInformationMessage('No Claude plans found in ~/.claude/plans.');
+    return;
+  }
+
+  if (plans.length === 1) {
+    await router.renderExplicitly(plans[0].file);
+    return;
+  }
+
+  const picked = await vscode.window.showQuickPick(
+    plans.map(p => ({
+      label: path.basename(p.file, '.md'),
+      description: new Date(p.mtime).toLocaleString(),
+      file: p.file,
+    })),
+    { placeHolder: 'Select a Claude plan to open' },
+  );
+  if (picked) { await router.renderExplicitly(picked.file); }
+}
 
 // ── Hook installation helpers (outside activate) ──────────────────────────────
 
 /**
+ * The shell the hook runs. It broadcasts the tool payload to every window
+ * registered in the instance directory; each window then decides for itself
+ * whether the change belongs to it.
+ *
+ * Fanning out beats routing here for two reasons: the ownership rule stays in
+ * TypeScript instead of being duplicated in shell, and the command contains no
+ * path into the extension install directory — which would otherwise break on
+ * every version bump. Dependencies are still just jq and curl.
+ */
+const HOOK_COMMAND = [
+  `p=$(jq -rc '{filePath:(.tool_input.file_path//.tool_input.path//""),cwd:(.cwd//""),transcriptPath:(.transcript_path//"")}|select(.filePath!="")')`,
+  `[ -n "$p" ] && for f in "$HOME"/.claude/claude-cli-companion/instances/*.json; do`,
+  `  [ -e "$f" ] || continue`,
+  `  port=$(jq -r '.port // empty' "$f")`,
+  // -m 1 bounds the cost of a registry entry whose window died between the
+  // liveness prune and this call.
+  `  [ -n "$port" ] && curl -s -m 1 -X POST "http://127.0.0.1:$port/file-changed" -H 'Content-Type: application/json' -d "$p" >/dev/null`,
+  `done; true`,
+].join('\n');
+
+/**
  * Writes the PostToolUse hook entry into ~/.claude/settings.json so that
  * Claude Code automatically notifies the diff server when it edits a file.
+ *
+ * @param announce - Whether to confirm with a notification. Suppressed when the
+ *   call is a silent in-place upgrade of an entry the user already accepted.
  */
-function installClaudeCodeHooks(port: number): void {
+function installClaudeCodeHooks(announce = true): void {
   const settingsPath = path.join(os.homedir(), '.claude', 'settings.json');
 
   let settings: any = {};
@@ -294,46 +431,53 @@ function installClaudeCodeHooks(port: number): void {
   if (!settings.hooks) { settings.hooks = {}; }
   if (!settings.hooks.PostToolUse) { settings.hooks.PostToolUse = []; }
 
-  // Remove any existing entry written by this extension
+  // Remove any existing entry written by this extension, at any version
   settings.hooks.PostToolUse = (settings.hooks.PostToolUse as any[]).filter(
     (entry: any) => !entry._claudeDiffReview
   );
 
   settings.hooks.PostToolUse.push({
-    _claudeDiffReview: true,
+    _claudeDiffReview: HOOK_VERSION,
     matcher: 'Edit|Write|MultiEdit',
-    hooks: [
-      {
-        type: 'command',
-        command: `jq -rc '{"filePath":(.tool_input.path//.tool_input.file_path//"")}|select(.filePath!="")' | curl -s -X POST http://127.0.0.1:${port}/file-changed -H 'Content-Type: application/json' -d @- || true`,
-      },
-    ],
+    hooks: [{ type: 'command', command: HOOK_COMMAND }],
   });
 
   try {
     fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
-    vscode.window.showInformationMessage(
-      `Claude Diff: Hooks installed in ~/.claude/settings.json (port ${port}). ` +
-      'Make sure jq and curl are available in your PATH.'
-    );
+    if (announce) {
+      vscode.window.showInformationMessage(
+        'Claude Diff: Hooks installed in ~/.claude/settings.json. ' +
+        'Make sure jq and curl are available in your PATH.'
+      );
+    }
   } catch (err) {
     vscode.window.showErrorMessage(`Claude Diff: Failed to write settings — ${String(err)}`);
   }
 }
 
 /**
- * Checks whether the hook is already installed; if not, prompts the user once
- * per session to install it.
+ * Installs the hook, prompting first when there is nothing there yet.
+ *
+ * An entry this extension wrote at an older version is upgraded in place without
+ * asking: the user already consented to it, and re-prompting on every release
+ * would be noise.
  */
-function checkAndPromptHookInstall(port: number): void {
+function checkAndPromptHookInstall(log: vscode.OutputChannel): void {
   const settingsPath = path.join(os.homedir(), '.claude', 'settings.json');
   try {
     if (fs.existsSync(settingsPath)) {
       const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
       const hooks: any[] = settings?.hooks?.PostToolUse ?? [];
-      if (hooks.some((e: any) => e._claudeDiffReview)) {
-        return; // Already installed — nothing to do
+      const existing = hooks.find((e: any) => e._claudeDiffReview);
+      if (existing) {
+        // `true` was the v1 marker, before versions were tracked.
+        const version = existing._claudeDiffReview === true ? 1 : Number(existing._claudeDiffReview);
+        if (version < HOOK_VERSION) {
+          log.appendLine(`[hook] upgrading settings.json entry v${version} -> v${HOOK_VERSION}`);
+          installClaudeCodeHooks(false);
+        }
+        return;
       }
     }
   } catch {
@@ -344,6 +488,6 @@ function checkAndPromptHookInstall(port: number): void {
     'Claude Diff: Install Claude Code hooks to enable automatic diff review?',
     'Install', 'Not Now'
   ).then(choice => {
-    if (choice === 'Install') { installClaudeCodeHooks(port); }
+    if (choice === 'Install') { installClaudeCodeHooks(); }
   });
 }

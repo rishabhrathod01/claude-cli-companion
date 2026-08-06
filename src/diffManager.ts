@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { execFileSync } from 'child_process';
 import { OriginalContentProvider } from './originalProvider';
 import { ReviewQueue } from './reviewQueue';
+import { getGitHeadContent } from './git';
+import { targetViewColumnOrBeside } from './editorGroups';
 import { isPlanFile } from './planManager';
 
 export class DiffManager {
@@ -25,7 +26,7 @@ export class DiffManager {
     const showNotifications = config.get<boolean>('showNotifications', true);
     console.log(`[claude-diff] config: autoOpenDiff=${autoOpen}, showNotifications=${showNotifications}`);
 
-    const headContent = this.getGitHeadContent(filePath);
+    const headContent = getGitHeadContent(filePath) ?? '';
     console.log(`[claude-diff] git HEAD content length: ${headContent.length} chars`);
     this.provider.store(filePath, headContent);
     this.queue.add(filePath);
@@ -48,21 +49,32 @@ export class DiffManager {
     const uri = vscode.Uri.file(filePath);
     const originalUri = this.provider.makeUri(filePath);
     console.log(`[claude-diff] original URI: ${originalUri.toString()}`);
+    // Open beside the user's code, not on top of the Claude terminal — when the
+    // CLI runs as an editor-area terminal, the active group is the terminal's.
     await vscode.commands.executeCommand(
       'vscode.diff', originalUri, uri,
       `Claude: ${path.basename(filePath)} (Before ↔ After)`,
-      { preview: false }
+      { preview: false, viewColumn: targetViewColumnOrBeside(isPlanFile) }
     );
     console.log(`[claude-diff] vscode.diff command completed`);
   }
 
   async acceptChanges(filePath: string): Promise<void> {
     // Changes are already on disk — just mark resolved and close
-    this.queue.resolve(filePath, true);
-    this.provider.clear(filePath);
-    await this.closeDiff(filePath);
+    await this.resolveSilently(filePath, true);
     vscode.window.showInformationMessage(`Accepted changes to ${path.basename(filePath)}`);
     await this.openNextPending();
+  }
+
+  /**
+   * Drops a file from the review queue and closes its diff without notifying the
+   * user. Used by the commit reconciler, where the resolution is inferred rather
+   * than requested — a toast per committed file would be noise.
+   */
+  async resolveSilently(filePath: string, accepted: boolean): Promise<void> {
+    this.queue.resolve(filePath, accepted);
+    this.provider.clear(filePath);
+    await this.closeDiff(filePath);
   }
 
   async rejectChanges(filePath: string): Promise<void> {
@@ -132,21 +144,5 @@ export class DiffManager {
       }
     }
     await vscode.commands.executeCommand('setContext', 'claudeDiff.isDiffOpen', false);
-  }
-
-  private getGitHeadContent(filePath: string): string {
-    try {
-      const dir = path.dirname(filePath);
-      // Use execFileSync with argument arrays — no shell interpolation of filePath
-      const gitRoot = execFileSync('git', ['rev-parse', '--show-toplevel'], {
-        cwd: dir, encoding: 'utf8'
-      }).trim();
-      const relative = path.relative(gitRoot, filePath);
-      return execFileSync('git', ['show', `HEAD:${relative}`], {
-        cwd: gitRoot, encoding: 'utf8'
-      });
-    } catch {
-      return ''; // New file not yet tracked in git
-    }
   }
 }
