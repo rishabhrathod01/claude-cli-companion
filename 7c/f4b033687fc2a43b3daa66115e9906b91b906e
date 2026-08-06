@@ -1,0 +1,76 @@
+README.md
+  s_25b2b3bbab43cc::t_67c675d319d3f6 100
+  s_25b2b3bbab43cc::t_48c19e87c3a850 42-45
+  s_25b2b3bbab43cc::t_5d648331d980ac 120,123
+  s_25b2b3bbab43cc::t_42d32404a39876 58-61
+  s_25b2b3bbab43cc::t_13543e27a79d30 78,81
+src/hookServer.ts
+  s_25b2b3bbab43cc::t_255b59c36660a7 107-109,111-112
+  s_25b2b3bbab43cc::t_4dfd096bf3d132 36-42,44,49
+  s_25b2b3bbab43cc::t_ed96b97ad87e75 4-5,7-14,16-35,43,46-48,50,52-72,74-81,83-84,86,88-90,92,95,97,99-105,110,113-138,141
+src/planOwnership.ts
+  s_25b2b3bbab43cc::t_810ea611ce2ad4 1-125,137-171
+  s_25b2b3bbab43cc::t_a093d815fff1cf 126-136
+src/claudeTerminals.ts
+  s_25b2b3bbab43cc::t_b73e6581ebb8b8 21-22
+  s_25b2b3bbab43cc::t_8a431c3d65836d 90-91
+  s_25b2b3bbab43cc::t_a8145ab28669b6 1-20,23-63,71-74,78-79,81-89,92-106,114,116
+  s_25b2b3bbab43cc::t_4c032b7f59079d 75-77,80
+  s_25b2b3bbab43cc::t_9df90ec767916c 107-113,115
+  s_25b2b3bbab43cc::t_c6d07db3465334 64-70
+src/git.ts
+  s_25b2b3bbab43cc::t_165bec3736d9a4 2
+  s_25b2b3bbab43cc::t_a108d0798cb75f 15-18
+  s_25b2b3bbab43cc::t_369e7bc38d0444 13-14,22,26
+  s_25b2b3bbab43cc::t_f52ca63d45b8ff 1,3-12,19-21,23-25,27-31
+src/paths.ts
+  s_25b2b3bbab43cc::t_0587e7c2b23ae2 1-44
+src/claudeProjects.ts
+  s_25b2b3bbab43cc::t_ead1962e5e9392 1-211
+src/instanceRegistry.ts
+  s_25b2b3bbab43cc::t_5fc37122fd4dee 1-159
+src/commitReconciler.ts
+  s_25b2b3bbab43cc::t_772e8cd97bc5c0 1-100
+src/diffManager.ts
+  s_25b2b3bbab43cc::t_704be291aa4d09 28
+  s_25b2b3bbab43cc::t_e01f40e8b888d9 6
+  s_25b2b3bbab43cc::t_4c63b0540efdf1 61,66-74
+  s_5244219c475c83::t_6310a9d65daeb9 75-76
+src/extension.ts
+  s_25b2b3bbab43cc::t_dfeac1d49f3610 85-86,89
+  s_25b2b3bbab43cc::t_87fe6a854b5cc8 295-298,303,311-318,322,325-326,330-386,390
+  s_25b2b3bbab43cc::t_6a63b3be21a846 36-41
+  s_25b2b3bbab43cc::t_d2609e10a61014 13-26
+  s_25b2b3bbab43cc::t_814f4a91e3fa3e 217-239,243-245,248-253
+  s_25b2b3bbab43cc::t_ecb4f9fb413c72 391-410,414-416,418,434,440,442,448-453,460-464,466,472-480,491
+  s_25b2b3bbab43cc::t_c246ae21c05b25 283,287
+package.json
+  s_25b2b3bbab43cc::t_fa3ffd97ee6b87 38-40
+  s_25b2b3bbab43cc::t_c90418d2fb4af9 90-93
+  s_25b2b3bbab43cc::t_736534f618ed0a 143-157
+  s_25b2b3bbab43cc::t_2a302c57b9fd11 132
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "7cf4b033687fc2a43b3daa66115e9906b91b906e",
+  "prompts": {},
+  "sessions": {
+    "s_25b2b3bbab43cc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "782dfe19-c3f3-477c-8422-ad891fa2de5f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "rishabhrathod01 <rathod.rishabh@prophecy.io>"
+    },
+    "s_5244219c475c83": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "602e0eb5-ce01-42ce-a9e6-178937b089f8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "rishabhrathod01 <rathod.rishabh@prophecy.io>"
+    }
+  }
+}
