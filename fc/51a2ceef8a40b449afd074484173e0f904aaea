@@ -1,0 +1,19 @@
+package.json
+  s_db5b6d6fd159f1::t_862a4b1556147d 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "fc51a2ceef8a40b449afd074484173e0f904aaea",
+  "prompts": {},
+  "sessions": {
+    "s_db5b6d6fd159f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1022206f-6a7c-4598-97ea-9ced945a2f2c",
+        "model": "unknown"
+      },
+      "human_author": "rishabhrathod01 <rathod.rishabh@prophecy.io>"
+    }
+  }
+}
