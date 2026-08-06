@@ -4,6 +4,7 @@ import * as path from 'path';
 import { OriginalContentProvider } from './originalProvider';
 import { ReviewQueue } from './reviewQueue';
 import { getGitHeadContent } from './git';
+import { targetViewColumnOrBeside } from './editorGroups';
 import { isPlanFile } from './planManager';
 
 export class DiffManager {
@@ -48,10 +49,12 @@ export class DiffManager {
     const uri = vscode.Uri.file(filePath);
     const originalUri = this.provider.makeUri(filePath);
     console.log(`[claude-diff] original URI: ${originalUri.toString()}`);
+    // Open beside the user's code, not on top of the Claude terminal — when the
+    // CLI runs as an editor-area terminal, the active group is the terminal's.
     await vscode.commands.executeCommand(
       'vscode.diff', originalUri, uri,
       `Claude: ${path.basename(filePath)} (Before ↔ After)`,
-      { preview: false }
+      { preview: false, viewColumn: targetViewColumnOrBeside(isPlanFile) }
     );
     console.log(`[claude-diff] vscode.diff command completed`);
   }

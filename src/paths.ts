@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-/** True on platforms whose filesystems are conventionally case-insensitive. */
+/** True on platforms whose filesystems are conventionally case-insensitive (macOS, Windows). */
 const CASE_INSENSITIVE = process.platform === 'darwin' || process.platform === 'win32';
 
 function normalize(p: string): string {
