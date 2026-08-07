@@ -5,7 +5,7 @@ A VS Code extension for people who run the [Claude Code](https://claude.ai/code)
 It does three things:
 
 1. **Send code to Claude** with a keybind, instead of copy-pasting.
-2. **Review Claude's edits** as accept/reject diffs.
+2. **Track Claude's edits** in the status bar, and accept or reject them when you're ready.
 3. **Read Claude's plans** as rendered markdown you can act on.
 
 ---
@@ -42,8 +42,6 @@ Claude's edits are tracked quietly. The status bar shows `Claude: N pending` and
 Automatic diffs are **off by default** — they interrupt the flow when Claude is editing several files in a row. Turn them on from that menu, or with **`Claude Diff: Toggle Diff View`**.
 
 **Committing counts as accepting.** Commit a file and it disappears from the count, whether you committed in VS Code or in another terminal. A file you committed and then edited again still differs from `HEAD`, so it stays pending.
-
-Diffs compare against your **last commit**, so any uncommitted work of your own shows up in them too.
 
 This one needs a one-time setup step — see [Setup](#setup).
 
@@ -124,13 +122,15 @@ Multi-select only works via right-click — VS Code's API doesn't expose it to k
 | `claudeDiff.showNotifications` | `false` | With `autoOpenDiff` off, show a "Review Changes" notification per file instead |
 | `claudeDiff.port` | `7878` | Preferred port for this window's hook server. Every window runs one, so a taken port just means an ephemeral one is used instead |
 
+`Claude Diff: Toggle Diff View` writes `claudeDiff.autoOpenDiff` to your user settings, not the workspace — whether diffs pop open is a preference about how you work, not a property of one project.
+
 ---
 
 ## How it works
 
 **Sending context** — the extension writes the reference into the terminal's input buffer and moves focus there. Nothing is submitted until you press Enter.
 
-**Diff review** — the hook posts the changed file's path to a small server on `127.0.0.1` inside each VS Code window. The window that owns the file stores its `git HEAD` content, queues it, and opens the diff against an in-memory copy. Rejecting writes that copy back to disk.
+**Diff review** — the hook posts the changed file's path to a small server on `127.0.0.1` inside each VS Code window. The window that owns the file stashes its `git HEAD` content in memory and adds it to the queue; that stashed copy is what the diff renders against, and what rejecting writes back to disk. Nothing opens unless you ask, or unless the diff view is switched on.
 
 **Plans** — a file watcher on `~/.claude/plans/*.md` picks up new plans. To decide which window should open one, the extension reads the session's project directory out of Claude's own transcripts under `~/.claude/projects/` and compares it against the window's workspace folders.
 
