@@ -1,0 +1,19 @@
+.vscodeignore
+  s_25b2b3bbab43cc::t_8a3d8527af50ab 12-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "3ea3f71e489d235b15a2d551992c38d3f8f43a9b",
+  "prompts": {},
+  "sessions": {
+    "s_25b2b3bbab43cc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "782dfe19-c3f3-477c-8422-ad891fa2de5f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "rishabhrathod01 <rathod.rishabh@prophecy.io>"
+    }
+  }
+}
