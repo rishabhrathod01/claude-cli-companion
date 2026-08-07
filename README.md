@@ -31,14 +31,19 @@ Folders are expanded to the files inside them, skipping `node_modules`, `.git`, 
 
 ## 2. Review Claude's edits
 
-When Claude edits a file, a diff opens comparing your last commit (`git HEAD`) against what's now on disk.
+Claude's edits are tracked quietly. The status bar shows `Claude: N pending` and nothing interrupts you.
 
-- **✓ Accept** — keep the change
-- **↺ Reject** — restore the file to its `git HEAD` content
-- **Accept All / Reject All** — clear the whole queue
-- The status bar shows `Claude: N pending` — click it to pick a file to review
+**Click the status bar** to get a menu:
+
+- **Accept All** / **Reject All** — clear the queue in one go. Reject restores each file to its `git HEAD` content.
+- **Enable diff view** — turn on automatic diffs, if you'd rather see each change as it happens
+- Or pick a single file to open its diff, then **✓ Accept** / **↺ Reject** from the editor title bar
+
+Automatic diffs are **off by default** — they interrupt the flow when Claude is editing several files in a row. Turn them on from that menu, or with **`Claude Diff: Toggle Diff View`**.
 
 **Committing counts as accepting.** Commit a file and it disappears from the count, whether you committed in VS Code or in another terminal. A file you committed and then edited again still differs from `HEAD`, so it stays pending.
+
+Diffs compare against your **last commit**, so any uncommitted work of your own shows up in them too.
 
 This one needs a one-time setup step — see [Setup](#setup).
 
@@ -96,7 +101,8 @@ Sending context and viewing plans need no setup.
 | `Claude Diff: Reject Claude Changes` | Revert the open diff to `git HEAD` |
 | `Claude Diff: Accept All Pending Changes` | Accept everything queued |
 | `Claude Diff: Reject All Pending Changes` | Revert everything queued |
-| `Claude Diff: Show Pending Review Queue` | Pick a pending file to review |
+| `Claude Diff: Show Pending Review Queue` | Open the status bar menu — bulk actions and pending files |
+| `Claude Diff: Toggle Diff View` | Turn automatic diffs on or off |
 | `Claude Diff: Install Claude Code Hooks` | (Re)install the diff-review hook |
 
 ## Keybindings
@@ -114,8 +120,8 @@ Multi-select only works via right-click — VS Code's API doesn't expose it to k
 | Setting | Default | What it does |
 |---|---|---|
 | `claudePlan.autoOpen` | `owner` | Which window opens a plan. `owner` = only the matching one, `always` = all of them, `never` = none |
-| `claudeDiff.autoOpenDiff` | `true` | Open the diff automatically when Claude edits a file |
-| `claudeDiff.showNotifications` | `true` | With `autoOpenDiff` off, show a "Review Changes" notification instead |
+| `claudeDiff.autoOpenDiff` | `false` | Open the diff automatically when Claude edits a file |
+| `claudeDiff.showNotifications` | `false` | With `autoOpenDiff` off, show a "Review Changes" notification per file instead |
 | `claudeDiff.port` | `7878` | Preferred port for this window's hook server. Every window runs one, so a taken port just means an ephemeral one is used instead |
 
 ---

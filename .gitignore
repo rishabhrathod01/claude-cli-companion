@@ -10,5 +10,10 @@ out/
 # TypeScript build info
 *.tsbuildinfo
 
+# Local environment
+.env
+.env.*
+!.env.example
+
 # OS
 *.DS_Store

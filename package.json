@@ -79,6 +79,10 @@
         "title": "Claude Diff: Install Claude Code Hooks"
       },
       {
+        "command": "claudeDiff.toggleDiffView",
+        "title": "Claude Diff: Toggle Diff View"
+      },
+      {
         "command": "claudePlan.build",
         "title": "Build Plan",
         "icon": "$(run-all)"
@@ -133,13 +137,13 @@
         },
         "claudeDiff.autoOpenDiff": {
           "type": "boolean",
-          "default": true,
-          "description": "Automatically open diff view when Claude edits a file"
+          "default": false,
+          "description": "Open the diff view automatically when Claude edits a file. Off by default — the status bar tracks pending changes without interrupting you. Toggle with 'Claude Diff: Toggle Diff View'."
         },
         "claudeDiff.showNotifications": {
           "type": "boolean",
-          "default": true,
-          "description": "Show notifications when files are changed by Claude"
+          "default": false,
+          "description": "Show a 'Review Changes' notification for each file Claude edits. Only applies when 'claudeDiff.autoOpenDiff' is off."
         },
         "claudePlan.autoOpen": {
           "type": "string",

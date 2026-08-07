@@ -22,8 +22,10 @@ export class DiffManager {
       return;
     }
     const config = vscode.workspace.getConfiguration('claudeDiff');
-    const autoOpen = config.get<boolean>('autoOpenDiff', true);
-    const showNotifications = config.get<boolean>('showNotifications', true);
+    // Both default off: a change is recorded in the status bar without opening
+    // anything or interrupting. Opt in via 'Claude Diff: Toggle Diff View'.
+    const autoOpen = config.get<boolean>('autoOpenDiff', false);
+    const showNotifications = config.get<boolean>('showNotifications', false);
     console.log(`[claude-diff] config: autoOpenDiff=${autoOpen}, showNotifications=${showNotifications}`);
 
     const headContent = getGitHeadContent(filePath) ?? '';
