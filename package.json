@@ -63,6 +63,10 @@
         "icon": "$(discard)"
       },
       {
+        "command": "claudeDiff.viewAllChanges",
+        "title": "Claude Diff: View All Pending Changes"
+      },
+      {
         "command": "claudeDiff.acceptAll",
         "title": "Claude Diff: Accept All Pending Changes"
       },

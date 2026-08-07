@@ -261,6 +261,7 @@ export function activate(context: vscode.ExtensionContext) {
       const fp = diffMgr.getActiveFilePath();
       if (fp) { await diffMgr.rejectChanges(fp); }
     }),
+    vscode.commands.registerCommand('claudeDiff.viewAllChanges', () => diffMgr.openAllDiffs()),
     vscode.commands.registerCommand('claudeDiff.acceptAll', () => diffMgr.acceptAll()),
     vscode.commands.registerCommand('claudeDiff.rejectAll',  () => diffMgr.rejectAll()),
     vscode.commands.registerCommand('claudeDiff.showQueue', () => showReviewMenu(queue, diffMgr)),
@@ -360,11 +361,17 @@ async function showReviewMenu(queue: ReviewQueue, diffMgr: DiffManager): Promise
   const pending = queue.pending();
   const enabled = diffViewEnabled();
 
-  type Item = vscode.QuickPickItem & { action?: 'acceptAll' | 'rejectAll' | 'toggle'; filePath?: string };
+  type Action = 'viewAll' | 'acceptAll' | 'rejectAll' | 'toggle';
+  type Item = vscode.QuickPickItem & { action?: Action; filePath?: string };
   const items: Item[] = [];
 
   if (pending.length > 0) {
     items.push(
+      {
+        label: '$(diff-multiple) View All Changes',
+        description: `open ${pending.length} file${pending.length === 1 ? '' : 's'} in one diff`,
+        action: 'viewAll',
+      },
       {
         label: '$(check-all) Accept All',
         description: `${pending.length} file${pending.length === 1 ? '' : 's'}`,
@@ -404,9 +411,10 @@ async function showReviewMenu(queue: ReviewQueue, diffMgr: DiffManager): Promise
   if (!selected) { return; }
 
   switch (selected.action) {
-    case 'acceptAll': await diffMgr.acceptAll(); return;
-    case 'rejectAll': await diffMgr.rejectAll(); return;
-    case 'toggle':    await toggleDiffView();    return;
+    case 'viewAll':   await diffMgr.openAllDiffs(); return;
+    case 'acceptAll': await diffMgr.acceptAll();    return;
+    case 'rejectAll': await diffMgr.rejectAll();    return;
+    case 'toggle':    await toggleDiffView();       return;
   }
   if (selected.filePath) { await diffMgr.openDiff(selected.filePath); }
 }
