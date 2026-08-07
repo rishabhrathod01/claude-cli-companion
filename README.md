@@ -1,4 +1,6 @@
-# [Claude CLI Companion](https://marketplace.visualstudio.com/items?itemName=rishabh-rathod.claude-cli-companion)
+# [Claude CLI Companion](https://marketplace.visualstudio.com/items?itemName=rishabh-rathod.claude-cli-companion) 
+
+[![Publish to VS Code Marketplace](https://github.com/rishabhrathod01/claude-cli-companion/actions/workflows/publish.yml/badge.svg?branch=main)](https://github.com/rishabhrathod01/claude-cli-companion/actions/workflows/publish.yml)
 
 A VS Code extension for people who run the [Claude Code](https://claude.ai/code) CLI in a VS Code terminal.
 
