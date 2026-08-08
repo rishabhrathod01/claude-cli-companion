@@ -9,3 +9,8 @@ src/**
 EXTENSION.md
 scripts/**
 node_modules/**
+.env
+.env.*
+.github/**
+*.vsix
+docs/**

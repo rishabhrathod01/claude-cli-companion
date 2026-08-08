@@ -22,8 +22,10 @@ export class DiffManager {
       return;
     }
     const config = vscode.workspace.getConfiguration('claudeDiff');
-    const autoOpen = config.get<boolean>('autoOpenDiff', true);
-    const showNotifications = config.get<boolean>('showNotifications', true);
+    // Both default off: a change is recorded in the status bar without opening
+    // anything or interrupting. Opt in via 'Claude Diff: Toggle Diff View'.
+    const autoOpen = config.get<boolean>('autoOpenDiff', false);
+    const showNotifications = config.get<boolean>('showNotifications', false);
     console.log(`[claude-diff] config: autoOpenDiff=${autoOpen}, showNotifications=${showNotifications}`);
 
     const headContent = getGitHeadContent(filePath) ?? '';
@@ -57,6 +59,44 @@ export class DiffManager {
       { preview: false, viewColumn: targetViewColumnOrBeside(isPlanFile) }
     );
     console.log(`[claude-diff] vscode.diff command completed`);
+  }
+
+  /**
+   * Opens every pending change at once, on demand.
+   *
+   * This is the point of leaving auto-open off: nothing interrupts you while
+   * Claude works, then you look at everything in one place and accept it in one
+   * go. Prefers VS Code's multi-file diff editor so all files land in a single
+   * scrollable tab; older hosts that lack `vscode.changes` get one tab per file.
+   */
+  async openAllDiffs(): Promise<void> {
+    const pending = this.queue.pending();
+    if (pending.length === 0) {
+      vscode.window.showInformationMessage('No pending Claude changes.');
+      return;
+    }
+
+    await vscode.commands.executeCommand('setContext', 'claudeDiff.isDiffOpen', true);
+
+    const commands = await vscode.commands.getCommands(true);
+    if (commands.includes('vscode.changes')) {
+      // [resourceUri, originalUri, modifiedUri] per row.
+      const resources = pending.map(r => [
+        vscode.Uri.file(r.filePath),
+        this.provider.makeUri(r.filePath),
+        vscode.Uri.file(r.filePath),
+      ]);
+      await vscode.commands.executeCommand(
+        'vscode.changes',
+        `Claude: ${pending.length} pending change${pending.length === 1 ? '' : 's'}`,
+        resources,
+      );
+      return;
+    }
+
+    for (const review of pending) {
+      await this.openDiff(review.filePath);
+    }
   }
 
   async acceptChanges(filePath: string): Promise<void> {
@@ -137,12 +177,26 @@ export class DiffManager {
   private async closeAllDiffs(): Promise<void> {
     for (const group of vscode.window.tabGroups.all) {
       for (const tab of group.tabs) {
-        const input = tab.input as any;
-        if (input?.original?.scheme === OriginalContentProvider.scheme) {
-          await vscode.window.tabGroups.close(tab);
-        }
+        if (isOurDiffTab(tab)) { await vscode.window.tabGroups.close(tab); }
       }
     }
     await vscode.commands.executeCommand('setContext', 'claudeDiff.isDiffOpen', false);
   }
+}
+
+/**
+ * True for a tab this extension opened — a single diff, or a multi-file diff
+ * holding at least one of ours.
+ *
+ * Both shapes have to be recognised or "Accept All" would leave the combined
+ * view sitting open over an empty queue. `textDiffs` is checked structurally
+ * rather than via `instanceof TabInputTextMultiDiff`, which does not exist on
+ * hosts predating the multi-diff editor.
+ */
+function isOurDiffTab(tab: vscode.Tab): boolean {
+  const input = tab.input as any;
+  if (input?.original?.scheme === OriginalContentProvider.scheme) { return true; }
+  const textDiffs = input?.textDiffs;
+  return Array.isArray(textDiffs)
+    && textDiffs.some((d: any) => d?.original?.scheme === OriginalContentProvider.scheme);
 }

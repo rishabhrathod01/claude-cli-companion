@@ -261,25 +261,11 @@ export function activate(context: vscode.ExtensionContext) {
       const fp = diffMgr.getActiveFilePath();
       if (fp) { await diffMgr.rejectChanges(fp); }
     }),
+    vscode.commands.registerCommand('claudeDiff.viewAllChanges', () => diffMgr.openAllDiffs()),
     vscode.commands.registerCommand('claudeDiff.acceptAll', () => diffMgr.acceptAll()),
     vscode.commands.registerCommand('claudeDiff.rejectAll',  () => diffMgr.rejectAll()),
-    vscode.commands.registerCommand('claudeDiff.showQueue', async () => {
-      const pending = queue.pending();
-      if (pending.length === 0) {
-        vscode.window.showInformationMessage('No pending Claude reviews.');
-        return;
-      }
-      const selected = await vscode.window.showQuickPick(
-        pending.map(r => ({
-          label: path.basename(r.filePath),
-          description: r.filePath,
-          detail: `Changed at ${r.timestamp.toLocaleTimeString()}`,
-          filePath: r.filePath,
-        })),
-        { placeHolder: 'Select a file to review' }
-      );
-      if (selected) { await diffMgr.openDiff(selected.filePath); }
-    }),
+    vscode.commands.registerCommand('claudeDiff.showQueue', () => showReviewMenu(queue, diffMgr)),
+    vscode.commands.registerCommand('claudeDiff.toggleDiffView', () => toggleDiffView()),
     vscode.commands.registerCommand('claudeDiff.installHooks', () => installClaudeCodeHooks()),
     statusBar,
   );
@@ -338,6 +324,99 @@ export function deactivate() {
   hookServerRef = undefined;
   registryRef?.dispose();
   registryRef = undefined;
+}
+
+// ── Review queue menu ─────────────────────────────────────────────────────────
+
+/** Whether the diff view opens automatically when Claude edits a file. */
+function diffViewEnabled(): boolean {
+  return vscode.workspace.getConfiguration('claudeDiff').get<boolean>('autoOpenDiff', false);
+}
+
+/**
+ * Flips `claudeDiff.autoOpenDiff` and reports the new state.
+ *
+ * Written at user scope rather than workspace scope: whether diffs pop open is a
+ * preference about how you work, not a property of one project.
+ */
+async function toggleDiffView(): Promise<void> {
+  const next = !diffViewEnabled();
+  await vscode.workspace
+    .getConfiguration('claudeDiff')
+    .update('autoOpenDiff', next, vscode.ConfigurationTarget.Global);
+  vscode.window.showInformationMessage(
+    next
+      ? 'Claude Diff: diff view enabled — diffs will open automatically.'
+      : 'Claude Diff: diff view disabled — changes are tracked in the status bar only.',
+  );
+}
+
+/**
+ * The status bar menu. Bulk actions sit above the file list so the queue can be
+ * cleared without opening anything, which is the common case when the diff view
+ * is off. The toggle is here too because the status bar is the only surface left
+ * once diffs stop opening on their own.
+ */
+async function showReviewMenu(queue: ReviewQueue, diffMgr: DiffManager): Promise<void> {
+  const pending = queue.pending();
+  const enabled = diffViewEnabled();
+
+  type Action = 'viewAll' | 'acceptAll' | 'rejectAll' | 'toggle';
+  type Item = vscode.QuickPickItem & { action?: Action; filePath?: string };
+  const items: Item[] = [];
+
+  if (pending.length > 0) {
+    items.push(
+      {
+        label: '$(diff-multiple) View All Changes',
+        description: `open ${pending.length} file${pending.length === 1 ? '' : 's'} in one diff`,
+        action: 'viewAll',
+      },
+      {
+        label: '$(check-all) Accept All',
+        description: `${pending.length} file${pending.length === 1 ? '' : 's'}`,
+        action: 'acceptAll',
+      },
+      {
+        label: '$(discard) Reject All',
+        description: `revert ${pending.length} file${pending.length === 1 ? '' : 's'} to git HEAD`,
+        action: 'rejectAll',
+      },
+    );
+  }
+
+  items.push({
+    label: enabled ? '$(eye-closed) Disable diff view' : '$(eye) Enable diff view',
+    description: enabled ? 'diffs open automatically' : 'changes tracked in the status bar only',
+    action: 'toggle',
+  });
+
+  if (pending.length > 0) {
+    items.push({ label: 'Pending changes', kind: vscode.QuickPickItemKind.Separator });
+    for (const review of pending) {
+      items.push({
+        label: `$(diff) ${path.basename(review.filePath)}`,
+        description: review.filePath,
+        detail: `Changed at ${review.timestamp.toLocaleTimeString()}`,
+        filePath: review.filePath,
+      });
+    }
+  }
+
+  const selected = await vscode.window.showQuickPick(items, {
+    placeHolder: pending.length
+      ? `${pending.length} pending Claude change${pending.length === 1 ? '' : 's'}`
+      : 'No pending Claude changes',
+  });
+  if (!selected) { return; }
+
+  switch (selected.action) {
+    case 'viewAll':   await diffMgr.openAllDiffs(); return;
+    case 'acceptAll': await diffMgr.acceptAll();    return;
+    case 'rejectAll': await diffMgr.rejectAll();    return;
+    case 'toggle':    await toggleDiffView();       return;
+  }
+  if (selected.filePath) { await diffMgr.openDiff(selected.filePath); }
 }
 
 // ── Plan escape hatch ─────────────────────────────────────────────────────────
