@@ -1,0 +1,14 @@
+package.json
+  h_254a44d1f12105 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "8afbcd2628561c82a5a89f4554727bb052fb1216",
+  "prompts": {},
+  "humans": {
+    "h_254a44d1f12105": {
+      "author": "rishabhrathod01 <rathod.rishabh@prophecy.io>"
+    }
+  }
+}
