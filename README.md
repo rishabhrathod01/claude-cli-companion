@@ -10,11 +10,15 @@ It does three things:
 2. **Track Claude's edits** in the status bar, and accept or reject them when you're ready.
 3. **Read Claude's plans** as rendered markdown you can act on.
 
+
+
 ---
 
 ## 1. Send code to Claude
 
 Select some lines and press `Cmd+L` (`Ctrl+L` on Windows/Linux).
+
+<img width="800" height="499" alt="ScreenRecording2026-08-10at1 51 34AM-ezgif com-optimize" src="https://github.com/user-attachments/assets/c3caa2a9-4517-4b85-aa6b-37f4c2147097" />
 
 The extension types `@src/app.ts:42-58` into the Claude terminal and hands you the keyboard, so you can finish the sentence: *"@src/app.ts:42-58 why does this re-render?"* It does **not** press Enter.
 
@@ -37,7 +41,7 @@ Claude's edits are tracked quietly. The status bar shows `Claude: N pending` and
 
 **Click the status bar** to get a menu:
 
-![The review menu: Accept All, Reject All, a diff-view toggle, and the list of pending files](docs/review-menu.png)
+The review menu: Accept All, Reject All, a diff-view toggle, and the list of pending files
 
 - **View All Changes** — every pending file in a single scrollable diff, opened only when you ask for it
 - **Accept All** / **Reject All** — clear the queue in one go. Reject restores each file to its `git HEAD` content.
